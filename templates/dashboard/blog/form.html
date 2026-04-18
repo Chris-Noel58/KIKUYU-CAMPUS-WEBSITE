@@ -1,0 +1,94 @@
+{% extends 'dashboard/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ title }} - Dashboard{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-5">
+                <form method="POST" enctype="multipart/form-data" data-validate="true">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Post Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="alert alert-danger small mt-1">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Featured Image</label>
+                        {{ form.featured_image }}
+                        {% if form.featured_image.errors %}
+                        <div class="alert alert-danger small mt-1">{{ form.featured_image.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Excerpt *</label>
+                        {{ form.excerpt }}
+                        {% if form.excerpt.errors %}
+                        <div class="alert alert-danger small mt-1">{{ form.excerpt.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Content *</label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                        <div class="alert alert-danger small mt-1">{{ form.content.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-bold">Author</label>
+                            {{ form.author }}
+                            {% if form.author.errors %}
+                            <div class="alert alert-danger small mt-1">{{ form.author.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-bold">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="alert alert-danger small mt-1">{{ form.status.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        {{ form.is_featured }}
+                        <label class="form-check-label" for="id_is_featured">
+                            Mark as Featured
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Save Post
+                        </button>
+                        <a href="{% url 'dashboard:blog_list' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

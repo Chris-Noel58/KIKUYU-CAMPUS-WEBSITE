@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Gallery - NCHSM Kikuyu Campus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-4">
+    <h1 class="fw-bold">Campus Gallery</h1>
+    <p class="text-muted">Life at NCHSM Kikuyu Campus</p>
+  </div>
+
+  <div class="row g-3">
+    {% for image in images %}
+    <div class="col-md-4 col-sm-6">
+      <div class="card overflow-hidden h-100">
+        {% if image.image %}
+        <img src="{{ image.image.url }}" class="w-100 object-fit-cover" alt="{{ image.title }}" style="height:250px;">
+        {% else %}
+        <div class="bg-secondary" style="height:250px;"></div>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title mb-1">{{ image.title }}</h5>
+          <p class="card-text text-muted small">{{ image.description|default_if_none:"" }}</p>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <p class="text-center text-muted">No gallery images available yet.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if is_paginated %}
+  <nav class="mt-4" aria-label="Gallery pagination">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+
+      <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

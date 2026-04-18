@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }} - NCHSM Kikuyu Campus{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 0;">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-2">{{ course.title }}</h1>
+        <p class="lead">Nakuru College of Health Sciences and Management - Kikuyu Campus</p>
+    </div>
+</div>
+
+<!-- Course Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                {% if course.featured_image %}
+                <img src="{{ course.featured_image.url }}" class="img-fluid rounded-3 shadow-sm mb-5" alt="{{ course.title }}">
+                {% endif %}
+                
+                <h2 class="fw-bold mb-3">Course Overview</h2>
+                <p class="lead">{{ course.description }}</p>
+                
+                <div class="row mt-5">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3">
+                                    <i class="fas fa-clock text-primary"></i> Duration
+                                </h6>
+                                <p class="mb-0">{{ course.duration }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3">
+                                    <i class="fas fa-calendar text-primary"></i> Intake Period
+                                </h6>
+                                <p class="mb-0">{{ course.get_intake_period_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if course.fees %}
+                <div class="alert alert-info mt-4">
+                    <h6 class="fw-bold mb-2">
+                        <i class="fas fa-money-bill"></i> Course Fees
+                    </h6>
+                    <p class="mb-0">KES {{ course.fees|floatformat:0 }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">Quick Info</h5>
+                        
+                        <div class="mb-4">
+                            <label class="text-muted small">Duration</label>
+                            <p class="fw-bold">{{ course.duration }}</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-muted small">Intake Period</label>
+                            <p class="fw-bold">{{ course.get_intake_period_display }}</p>
+                        </div>
+                        
+                        {% if course.fees %}
+                        <div class="mb-4">
+                            <label class="text-muted small">Fees</label>
+                            <p class="fw-bold">KES {{ course.fees|floatformat:0 }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'website:apply' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-paper-plane"></i> Apply Now
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">Need Help?</h5>
+                        <p class="text-muted">Contact our admissions team for more information about this course.</p>
+                        <a href="{% url 'website:contact' %}" class="btn btn-outline-primary w-100">
+                            Contact Us
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Related Courses -->
+{% if related_courses %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-5 text-center">Related Courses</h2>
+        
+        <div class="row g-4">
+            {% for related_course in related_courses %}
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 hover-lift">
+                    {% if related_course.featured_image %}
+                    <img src="{{ related_course.featured_image.url }}" class="card-img-top" alt="{{ related_course.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-book fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">{{ related_course.title }}</h5>
+                        <p class="card-text text-muted">{{ related_course.description|truncatewords:15 }}</p>
+                        <a href="{% url 'website:courses_detail' related_course.id %}" class="btn btn-sm btn-outline-primary">
+                            View Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Ready to Apply?</h2>
+        <p class="lead mb-4">Start your journey in {{ course.title }} today</p>
+        <a href="{% url 'website:apply' %}" class="btn btn-light btn-lg">
+            <i class="fas fa-paper-plane"></i> Apply Now
+        </a>
+    </div>
+</section>
+
+{% endblock %}
