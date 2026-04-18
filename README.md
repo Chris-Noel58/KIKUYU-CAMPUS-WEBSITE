@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NCHSM Kikuyu Campus - Professional Website System
 
 A comprehensive Django-based website system for Nakuru College of Health Sciences and Management - Kikuyu Campus with a powerful admin dashboard.
@@ -453,3 +454,6 @@ For technical support, contact the IT department at NCHSM Kikuyu Campus.
 - Admin dashboard complete
 - Responsive design
 - All required features
+=======
+# KIKUYU-CAMPUS-WEBSITE
+>>>>>>> 450a5d7bcdc78f33adb28025e7c05919c2d628ea
