@@ -69,6 +69,15 @@ if RENDER_EXTERNAL_HOSTNAME:
     if origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(origin)
 
+# Ensure the official production host is allowed
+PRODUCTION_HOST = 'kikuyu.nakurucollegeofhealth.ac.ke'
+if PRODUCTION_HOST not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(PRODUCTION_HOST)
+# also add https variant to CSRF trusted origins
+prod_origin = f"https://{PRODUCTION_HOST}"
+if prod_origin not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(prod_origin)
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -224,7 +233,7 @@ X_FRAME_OPTIONS = 'DENY'
 # WhiteNoise Static Files
 if not DEBUG:
     # Use CompressedStaticFilesStorage (non-manifest) in production to avoid Manifest errors
-   STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 else:
     # during development use default storage so collectstatic isn't required
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
