@@ -33,12 +33,25 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+# If running Django's development server, force DEBUG True for local testing
+if 'runserver' in os.sys.argv or os.environ.get('RUN_MAIN') or os.environ.get('WERKZEUG_RUN_MAIN'):
+    DEBUG = True
+
 # Normalize ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS to avoid [''] when empty
 _raw_allowed = config('ALLOWED_HOSTS', default='', cast=str)
 if _raw_allowed:
     ALLOWED_HOSTS = [h.strip() for h in _raw_allowed.split(',') if h.strip()]
 else:
     ALLOWED_HOSTS = []
+
+# Always allow local hosts for development convenience
+for local_host in ('127.0.0.1', 'localhost'):
+    if local_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(local_host)
+
+# If DEBUG is enabled, allow all hosts to avoid DisallowedHost during local testing
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 _raw_csrf = config('CSRF_TRUSTED_ORIGINS', default='', cast=str)
 if _raw_csrf:
@@ -211,6 +224,9 @@ X_FRAME_OPTIONS = 'DENY'
 # WhiteNoise Static Files
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    # during development use default storage so collectstatic isn't required
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Email Configuration
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
