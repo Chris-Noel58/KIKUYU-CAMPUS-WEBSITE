@@ -223,7 +223,8 @@ X_FRAME_OPTIONS = 'DENY'
 
 # WhiteNoise Static Files
 if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # Use CompressedStaticFilesStorage (non-manifest) in production to avoid Manifest errors
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 else:
     # during development use default storage so collectstatic isn't required
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
