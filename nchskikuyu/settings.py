@@ -5,12 +5,30 @@ Django settings for nchskikuyu project.
 import os
 from pathlib import Path
 from decouple import config, Csv
+import secrets
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')  # require SECRET_KEY in environment
+SECRET_KEY = config('SECRET_KEY', default=None)
+if not SECRET_KEY:
+    # Try to persist a generated secret on disk to provide a stable, secure fallback
+    SECRET_FILE = BASE_DIR / '.secret_key'
+    try:
+        if SECRET_FILE.exists():
+            SECRET_KEY = SECRET_FILE.read_text().strip()
+        else:
+            SECRET_KEY = secrets.token_urlsafe(50)
+            SECRET_FILE.write_text(SECRET_KEY)
+            try:
+                SECRET_FILE.chmod(0o600)
+            except Exception:
+                # ignore if chmod is unsupported on the platform
+                pass
+    except Exception:
+        # Last-resort in-memory secret (not persisted)
+        SECRET_KEY = secrets.token_urlsafe(50)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
