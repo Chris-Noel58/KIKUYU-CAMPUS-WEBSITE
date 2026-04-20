@@ -292,3 +292,19 @@ class SiteSettings(models.Model):
         if self.logo:
             return self.logo.url
         return ''
+
+class TeamMember(models.Model):
+    name = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
+    bio = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='team_photos/', blank=True, null=True)
+    order = models.PositiveSmallIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = 'Team member'
+        verbose_name_plural = 'Team members'
+
+    def __str__(self):
+        return self.name

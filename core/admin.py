@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html, mark_safe
 from core.models import (
     Course, BlogPost, Testimonial, GalleryImage,
-    Application, AboutPage, ContactInfo, AdminProfile, SiteSettings
+    Application, AboutPage, ContactInfo, AdminProfile, SiteSettings, TeamMember
 )
 
 
@@ -176,3 +176,19 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             return mark_safe(f'<img src="{obj.logo.url}" style="height:40px;"/>')
         return '(No logo)'
     logo_preview.short_description = 'Logo Preview'
+
+
+@admin.register(TeamMember)
+class TeamMemberAdmin(admin.ModelAdmin):
+    list_display = ('name', 'title', 'is_active', 'order')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'title')
+    ordering = ('order', 'name')
+    readonly_fields = ('photo_preview',)
+
+    def photo_preview(self, obj):
+        if obj.photo:
+            return format_html('<img src="{}" style="max-height: 100px;"/>', obj.photo.url)
+        return '-'
+
+    photo_preview.short_description = 'Photo preview'

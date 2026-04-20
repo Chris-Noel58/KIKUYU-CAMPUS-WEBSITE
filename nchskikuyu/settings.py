@@ -4,41 +4,58 @@ Django settings for nchskikuyu project.
 
 import os
 from pathlib import Path
-from decouple import config, Csv
-import secrets
+
+# Provide minimal drop-in replacements for python-decouple's config and Csv so a .env file is not required.
+# These read from environment variables and return sensible defaults where needed.
+def Csv():
+    return 'csv'
+
+def config(key, default=None, cast=None):
+    # Prefer environment variable; fall back to provided default, then apply cast.
+    raw = os.environ.get(key)
+    if raw is None:
+        val = default
+    else:
+        val = raw
+
+    # Boolean cast
+    if cast == bool:
+        return str(val).lower() in ('1', 'true', 'yes', 'on')
+
+    # Integer cast
+    if cast == int:
+        try:
+            return int(val)
+        except Exception:
+            return default
+
+    # CSV cast: support passing cast=Csv() which returns 'csv' or the literal string 'csv'
+    cast_is_csv = (cast == 'csv') or (callable(cast) and cast() == 'csv')
+    if cast_is_csv:
+        if isinstance(val, (list, tuple)):
+            return list(val)
+        if not val:
+            return []
+        return [p.strip() for p in str(val).split(',') if p.strip()]
+
+    return val
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default=None)
-if not SECRET_KEY:
-    # Try to persist a generated secret on disk to provide a stable, secure fallback
-    SECRET_FILE = BASE_DIR / '.secret_key'
-    try:
-        if SECRET_FILE.exists():
-            SECRET_KEY = SECRET_FILE.read_text().strip()
-        else:
-            SECRET_KEY = secrets.token_urlsafe(50)
-            SECRET_FILE.write_text(SECRET_KEY)
-            try:
-                SECRET_FILE.chmod(0o600)
-            except Exception:
-                # ignore if chmod is unsupported on the platform
-                pass
-    except Exception:
-        # Last-resort in-memory secret (not persisted)
-        SECRET_KEY = secrets.token_urlsafe(50)
+# Embedded from .env so the project can run without a .env file.
+SECRET_KEY = config('SECRET_KEY', default='your-real-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# If running Django's development server, force DEBUG True for local testing
+# If running Django's development server, enable DEBUG for local testing
 if 'runserver' in os.sys.argv or os.environ.get('RUN_MAIN') or os.environ.get('WERKZEUG_RUN_MAIN'):
     DEBUG = True
 
 # Normalize ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS to avoid [''] when empty
-_raw_allowed = config('ALLOWED_HOSTS', default='', cast=str)
+_raw_allowed = config('ALLOWED_HOSTS', default='kikuyu-campus-website.onrender.com,.onrender.com,kikuyu.nakurucollegeofhealth.ac.ke,127.0.0.1,localhost', cast=str)
 if _raw_allowed:
     ALLOWED_HOSTS = [h.strip() for h in _raw_allowed.split(',') if h.strip()]
 else:
@@ -53,7 +70,7 @@ for local_host in ('127.0.0.1', 'localhost'):
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 
-_raw_csrf = config('CSRF_TRUSTED_ORIGINS', default='', cast=str)
+_raw_csrf = config('CSRF_TRUSTED_ORIGINS', default='https://kikuyu-campus-website.onrender.com,https://kikuyu.nakurucollegeofhealth.ac.ke,http://127.0.0.1:8000,http://localhost:8000', cast=str)
 if _raw_csrf:
     CSRF_TRUSTED_ORIGINS = [u.strip() for u in _raw_csrf.split(',') if u.strip()]
 else:
@@ -135,34 +152,51 @@ WSGI_APPLICATION = 'nchskikuyu.wsgi.application'
 ASGI_APPLICATION = 'nchskikuyu.asgi.application'
 
 # Database
-# Support a single DATABASE_URL env var (e.g. from Heroku) or explicit DB settings
-DATABASE_URL = config('DATABASE_URL', default=None)
-if DATABASE_URL:
-    try:
-        import dj_database_url
-        default_db = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    except Exception:
-        default_db = {
-            'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-            'NAME': config('DB_NAME', default=BASE_DIR / 'db.sqlite3'),
-            'USER': config('DB_USER', default=''),
-            'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': config('DB_HOST', default=''),
-            'PORT': config('DB_PORT', default=''),
+# Default to SQLite for local/manage.py commands. Enable production DB (Postgres/MySQL) only by setting USE_PROD_DB=1 or DJANGO_PRODUCTION=1 in the environment.
+USE_PROD_DB = os.environ.get('USE_PROD_DB') == '1' or os.environ.get('DJANGO_PRODUCTION') == '1'
+if USE_PROD_DB:
+    # DB engine and credentials embedded from previous .env values as defaults
+    DB_ENGINE = config('DB_ENGINE', default='django.db.backends.postgresql')
+    if 'postgres' in DB_ENGINE or 'postgresql' in DB_ENGINE:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': config('DB_NAME', default='School_DB'),
+                'USER': config('DB_USER', default='postgres'),
+                'PASSWORD': config('DB_PASSWORD', default='Chris6658'),
+                'HOST': config('DB_HOST', default='localhost'),
+                'PORT': config('DB_PORT', default='5432'),
+            }
+        }
+    elif 'mysql' in DB_ENGINE:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': config('DB_NAME', default='nchsmcok_kikuyu'),
+                'USER': config('DB_USER', default='nchsmcok_kikuyu'),
+                'PASSWORD': config('DB_PASSWORD', default='Nchsm@Kikuyu2025'),
+                'HOST': config('DB_HOST', default='localhost'),
+                'PORT': config('DB_PORT', default='3306'),
+                'OPTIONS': {
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+                }
+            }
+        }
+    else:
+        # Unknown/unsupported engine: fall back to sqlite with a clear name
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
         }
 else:
-    default_db = {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=BASE_DIR / 'db.sqlite3'),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default=''),
-        'PORT': config('DB_PORT', default=''),
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-
-DATABASES = {
-    'default': default_db
-}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -189,6 +223,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Ensure the staticfiles directory exists to avoid runtime warnings and allow collectstatic to work
+try:
+    STATIC_ROOT.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
@@ -218,11 +257,19 @@ REST_FRAMEWORK = {
 # CORS
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000', cast=Csv())
 
+# Email Configuration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='your-email@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='your-app-password')
+
 # Security Settings
 # Default to secure cookie settings when not in DEBUG.  Override via env when needed.
-SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG, cast=bool)
-SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG, cast=bool)
-CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 
 SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False, cast=bool)
@@ -237,14 +284,6 @@ if not DEBUG:
 else:
     # during development use default storage so collectstatic isn't required
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-
-# Email Configuration
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # Logging
 LOG_DIR = BASE_DIR / 'logs'
