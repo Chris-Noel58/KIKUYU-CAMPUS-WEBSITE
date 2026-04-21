@@ -11,28 +11,47 @@
   </div>
 
   <div class="row g-3">
-    {% for image in images %}
-    <div class="col-md-4 col-sm-6">
-      <div class="card overflow-hidden h-100">
-        {% if image.image %}
-        <img src="{{ image.image.url }}" class="w-100 object-fit-cover" alt="{{ image.title }}" style="height:250px;" data-full-src="{{ image.image.url }}" data-title="{{ image.title }}" data-desc="{{ image.description|default_if_none:'' }}">
-        {% else %}
-        <div class="bg-secondary" style="height:250px;"></div>
-        {% endif %}
-        <div class="card-body">
-          <h5 class="card-title mb-1">{{ image.title }}</h5>
-          <p class="card-text text-muted small">{{ image.description|default_if_none:"" }}</p>
+    {% if images %}
+        {% for image in images %}
+        <div class="col-md-4 col-sm-6">
+          <div class="card overflow-hidden h-100">
+            {% if image.image %}
+            <img src="{{ image.image.url }}" class="w-100 object-fit-cover" alt="{{ image.title }}" style="height:250px;" data-full-src="{{ image.image.url }}" data-title="{{ image.title|escape }}" data-desc="{{ image.description|default_if_none:''|escape }}">
+            {% else %}
+            <div class="bg-secondary" style="height:250px;"></div>
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title mb-1">{{ image.title }}</h5>
+              <p class="card-text text-muted small">{{ image.description|default_if_none:"" }}</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-      <p class="text-center text-muted">No gallery images available yet.</p>
-    </div>
-    {% endfor %}
+        {% endfor %}
+    {% elif gallery_images %}
+        {% for image in gallery_images %}
+        <div class="col-md-4 col-sm-6">
+          <div class="card overflow-hidden h-100">
+            {% if image.image %}
+            <img src="{{ image.image.url }}" class="w-100 object-fit-cover" alt="{{ image.title }}" style="height:250px;" data-full-src="{{ image.image.url }}" data-title="{{ image.title|escape }}" data-desc="{{ image.description|default_if_none:''|escape }}">
+            {% else %}
+            <div class="bg-secondary" style="height:250px;"></div>
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title mb-1">{{ image.title }}</h5>
+              <p class="card-text text-muted small">{{ image.description|default_if_none:"" }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+          <p class="text-center text-muted">No gallery images available yet.</p>
+        </div>
+    {% endif %}
   </div>
-
-  {% if is_paginated %}
+  
+  {% comment %} safe pagination: check variables exist before using them {% endcomment %}
+  {% if is_paginated and page_obj %}
   <nav class="mt-4" aria-label="Gallery pagination">
     <ul class="pagination justify-content-center">
       {% if page_obj.has_previous %}
@@ -79,13 +98,21 @@ function openGalleryModal(url, title, desc) {
   img.alt = title || '';
   titleEl.textContent = title || '';
   descEl.textContent = desc || '';
-  var modal = new bootstrap.Modal(document.getElementById('galleryModal'));
-  modal.show();
+  var modalEl = document.getElementById('galleryModal');
+  if (typeof bootstrap !== 'undefined' && modalEl) {
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  } else {
+    // fallback: open image in new tab
+    window.open(url, '_blank');
+  }
 }
 
-// Attach click handlers for images that have data attributes
+// Attach click handlers only if there are images in the DOM
 document.addEventListener('DOMContentLoaded', function(){
-  document.querySelectorAll('.card img[data-full-src]').forEach(function(img){
+  var imgs = document.querySelectorAll('.card img[data-full-src]');
+  if (!imgs || imgs.length === 0) return;
+  imgs.forEach(function(img){
     img.style.cursor = 'pointer';
     img.addEventListener('click', function(){
       var full = img.getAttribute('data-full-src') || img.src;
