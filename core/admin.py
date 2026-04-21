@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html, mark_safe
 from core.models import (
     Course, BlogPost, Testimonial, GalleryImage,
-    Application, AboutPage, ContactInfo, AdminProfile, SiteSettings, TeamMember
+    Application, AboutPage, ContactInfo, AdminProfile, SiteSettings, TeamMember, ContactMessage
 )
 
 
@@ -192,3 +192,11 @@ class TeamMemberAdmin(admin.ModelAdmin):
         return '-'
 
     photo_preview.short_description = 'Photo preview'
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('email', 'subject', 'created', 'sent', 'attempts')
+    readonly_fields = ('name', 'email', 'subject', 'message', 'created', 'attempts', 'last_error')
+    list_filter = ('sent',)
+    search_fields = ('email', 'subject', 'message')

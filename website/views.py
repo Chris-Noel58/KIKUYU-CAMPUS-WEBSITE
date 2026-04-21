@@ -3,9 +3,11 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db.models import Q
 from django.views.decorators.http import require_http_methods
+from django.core.mail import send_mail, BadHeaderError, EmailMessage
+from django.conf import settings
 from core.models import (
     Course, BlogPost, Testimonial, GalleryImage, 
-    Application, AboutPage, ContactInfo
+    Application, AboutPage, ContactInfo, ContactMessage
 )
 from core.forms import ApplicationForm, ContactForm
 
@@ -217,25 +219,65 @@ def apply(request):
 @require_http_methods(["GET", "POST"])
 def contact(request):
     """Contact page view"""
-    if request.method == 'POST':
-        form = ContactForm(request.POST)
-        if form.is_valid():
-            # Handle contact form submission
-            messages.success(request, 'Thank you for contacting us. We will respond shortly.')
-            return redirect('website:contact')
-    else:
-        form = ContactForm()
-    
+    contact_info = None
     try:
         contact_info = ContactInfo.objects.first()
     except ContactInfo.DoesNotExist:
         contact_info = None
-    
-    context = {
+
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            # Save message record
+            cm = ContactMessage.objects.create(
+                name=cd.get('name', ''),
+                email=cd.get('email', ''),
+                subject=cd.get('subject', ''),
+                message=cd.get('message', ''),
+                sent=False,
+                attempts=0,
+            )
+
+            subject = cm.subject or 'Website contact'
+            body = f"From: {cm.name or 'Anonymous'} <{cm.email or 'no-reply'}>\n\n{cm.message}"
+
+            try:
+                # Use the visitor's email/address in the From header when provided.
+                # NOTE: many SMTP providers (Gmail) require the envelope sender to match the authenticated account;
+                # sending with an arbitrary From may be rejected or rewritten by the SMTP server. If that happens,
+                # the exception will be recorded in ContactMessage.
+                from_email = f"{cm.name} <{cm.email}>" if cm.email else settings.DEFAULT_FROM_EMAIL
+                headers = {'Reply-To': cm.email} if cm.email else None
+
+                email = EmailMessage(
+                    subject=subject,
+                    body=body,
+                    from_email=from_email,
+                    to=[settings.DEFAULT_FROM_EMAIL],
+                    reply_to=[cm.email] if cm.email else None,
+                    headers=headers,
+                )
+                email.send(fail_silently=False)
+
+                cm.sent = True
+                cm.attempts += 1
+                cm.last_error = ''
+                cm.save()
+                messages.success(request, 'Your message has been sent. We will contact you shortly.')
+            except Exception as e:
+                cm.attempts += 1
+                cm.last_error = str(e)
+                cm.save()
+                messages.error(request, 'There was a problem sending your message. The message has been saved and we will retry.')
+            return redirect('website:contact')
+    else:
+        form = ContactForm()
+
+    return render(request, 'website/contact.html', {
         'form': form,
         'contact_info': contact_info,
-    }
-    return render(request, 'website/contact.html', context)
+    })
 
 
 # ==================== NEWSLETTER ====================

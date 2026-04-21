@@ -3,6 +3,7 @@ from django.core.validators import URLValidator, EmailValidator
 from django.utils.text import slugify
 from PIL import Image
 import os
+from django.utils import timezone
 
 
 class TimeStampedModel(models.Model):
@@ -308,3 +309,21 @@ class TeamMember(models.Model):
 
     def __str__(self):
         return self.name
+
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=200, blank=True)
+    email = models.EmailField(blank=True)
+    subject = models.CharField(max_length=255, blank=True)
+    message = models.TextField()
+    created = models.DateTimeField(default=timezone.now)
+    sent = models.BooleanField(default=False)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_error = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = 'Contact message'
+        verbose_name_plural = 'Contact messages'
+
+    def __str__(self):
+        return f"{self.subject or 'Message'} from {self.email or 'anonymous'}"
