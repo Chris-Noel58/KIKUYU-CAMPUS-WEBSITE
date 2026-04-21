@@ -55,7 +55,7 @@ if 'runserver' in os.sys.argv or os.environ.get('RUN_MAIN') or os.environ.get('W
     DEBUG = True
 
 # Normalize ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS to avoid [''] when empty
-_raw_allowed = config('ALLOWED_HOSTS', default='kikuyu-campus-website.onrender.com,.onrender.com,kikuyu.nakurucollegeofhealth.ac.ke,127.0.0.1,localhost', cast=str)
+_raw_allowed = config('ALLOWED_HOSTS', default='139.162.161.28,kikuyu-campus-website.onrender.com,.onrender.com,kikuyu.nakurucollegeofhealth.ac.ke,127.0.0.1,localhost', cast=str)
 if _raw_allowed:
     ALLOWED_HOSTS = [h.strip() for h in _raw_allowed.split(',') if h.strip()]
 else:
