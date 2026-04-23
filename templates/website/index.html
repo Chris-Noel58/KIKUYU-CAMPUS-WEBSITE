@@ -132,7 +132,7 @@
         
         <div class="row g-4">
             {% for course in courses %}
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 mb-3 course-card d-none">
                 <div class="card border-0 shadow-sm h-100 hover-lift">
                     {% if course.featured_image %}
                     <img src="{{ course.featured_image.url }}" class="card-img-top img-fixed-height" alt="{{ course.title }}">
@@ -430,5 +430,28 @@ function showGalleryImage(url, title) {
     }
 })();
 // Hero slideshow is handled here (background-only crisp full-bleed)
+
+// Reveal 6 random course cards on each page load
+function showRandomCourses(limit = 6) {
+    const cards = Array.from(document.querySelectorAll('.course-card'));
+    if (!cards.length) return;
+
+    // Fisher-Yates shuffle
+    for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+
+    // Reveal the first `limit` cards
+    for (let i = 0; i < Math.min(limit, cards.length); i++) {
+        cards[i].classList.remove('d-none');
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => showRandomCourses(6));
+} else {
+    showRandomCourses(6);
+}
 </script>
 {% endblock %}
