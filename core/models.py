@@ -4,6 +4,9 @@ from django.utils.text import slugify
 from PIL import Image
 import os
 from django.utils import timezone
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
+from django.core.files.storage import default_storage
 
 
 class TimeStampedModel(models.Model):
@@ -214,7 +217,9 @@ class AboutPage(models.Model):
     principal_message = models.TextField(blank=True)
     principal_name = models.CharField(max_length=150, blank=True)
     principal_image = models.ImageField(upload_to='about/', null=True, blank=True)
+    history_image = models.ImageField(upload_to='about/', null=True, blank=True)
     campus_description = models.TextField()
+    campus_image = models.ImageField(upload_to='about/', null=True, blank=True)
     location = models.CharField(max_length=300)
     established_year = models.IntegerField(default=2024)
     updated_at = models.DateTimeField(auto_now=True)
@@ -225,6 +230,121 @@ class AboutPage(models.Model):
 
     def __str__(self):
         return "About Page"
+
+
+class AboutImage(models.Model):
+    """Additional images for the About page"""
+    about = models.ForeignKey(AboutPage, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='about/images/')
+    caption = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-uploaded_at']
+        verbose_name = 'About Image'
+        verbose_name_plural = 'About Images'
+
+    def __str__(self):
+        return f"AboutImage {self.pk} ({self.about})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Optimize saved image
+        if self.image and default_storage.exists(self.image.name):
+            try:
+                img = Image.open(self.image.path)
+                max_size = (1200, 900)
+                if img.height > max_size[1] or img.width > max_size[0]:
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    img.save(self.image.path, quality=85, optimize=True)
+            except Exception:
+                pass
+
+    def delete(self, *args, **kwargs):
+        # remove file from storage
+        try:
+            if self.image and default_storage.exists(self.image.name):
+                default_storage.delete(self.image.name)
+        except Exception:
+            pass
+        super().delete(*args, **kwargs)
+
+
+class AboutVideo(models.Model):
+    """Video files for the About page"""
+    about = models.ForeignKey(AboutPage, on_delete=models.CASCADE, related_name='videos')
+    file = models.FileField(upload_to='about/videos/')
+    caption = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-uploaded_at']
+        verbose_name = 'About Video'
+        verbose_name_plural = 'About Videos'
+
+    def __str__(self):
+        return f"AboutVideo {self.pk} ({self.about})"
+
+    def delete(self, *args, **kwargs):
+        try:
+            if self.file and default_storage.exists(self.file.name):
+                default_storage.delete(self.file.name)
+        except Exception:
+            pass
+        super().delete(*args, **kwargs)
+
+
+# Signals to cleanup files when instances are deleted or replaced
+@receiver(post_delete, sender=AboutImage)
+def delete_aboutimage_file(sender, instance, **kwargs):
+    if instance.image:
+        try:
+            instance.image.delete(save=False)
+        except Exception:
+            pass
+
+
+@receiver(post_delete, sender=AboutVideo)
+def delete_aboutvideo_file(sender, instance, **kwargs):
+    if instance.file:
+        try:
+            instance.file.delete(save=False)
+        except Exception:
+            pass
+
+
+@receiver(pre_save, sender=AboutImage)
+def auto_delete_old_image_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = AboutImage.objects.get(pk=instance.pk)
+    except AboutImage.DoesNotExist:
+        return
+    if old.image and old.image.name != instance.image.name:
+        try:
+            old.image.delete(save=False)
+        except Exception:
+            pass
+
+
+@receiver(pre_save, sender=AboutVideo)
+def auto_delete_old_video_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = AboutVideo.objects.get(pk=instance.pk)
+    except AboutVideo.DoesNotExist:
+        return
+    if old.file and old.file.name != instance.file.name:
+        try:
+            old.file.delete(save=False)
+        except Exception:
+            pass
 
 
 class ContactInfo(models.Model):

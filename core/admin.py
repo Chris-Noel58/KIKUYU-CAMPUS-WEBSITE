@@ -2,8 +2,19 @@ from django.contrib import admin
 from django.utils.html import format_html, mark_safe
 from core.models import (
     Course, BlogPost, Testimonial, GalleryImage,
-    Application, AboutPage, ContactInfo, AdminProfile, SiteSettings, TeamMember, ContactMessage
+    Application, AboutPage, ContactInfo, AdminProfile, SiteSettings, TeamMember, ContactMessage,
+    AboutImage, AboutVideo
 )
+
+
+class AboutImageInline(admin.TabularInline):
+    model = AboutImage
+    extra = 0
+
+
+class AboutVideoInline(admin.TabularInline):
+    model = AboutVideo
+    extra = 0
 
 
 @admin.register(Course)
@@ -121,18 +132,22 @@ class ApplicationAdmin(admin.ModelAdmin):
 
 @admin.register(AboutPage)
 class AboutPageAdmin(admin.ModelAdmin):
-    fieldsets = (
-        ('Page Title', {
-            'fields': ('title',)
-        }),
-        ('College Information', {
-            'fields': ('history', 'mission', 'vision', 'values', 'campus_description', 'location', 'established_year')
-        }),
-        ('Leadership', {
-            'fields': ('principal_name', 'principal_message', 'principal_image')
-        }),
-    )
-    readonly_fields = ('updated_at',)
+    list_display = ('title', 'updated_at')
+    inlines = [AboutImageInline, AboutVideoInline]
+
+
+@admin.register(AboutImage)
+class AboutImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'about', 'caption', 'is_active', 'uploaded_at')
+    list_filter = ('is_active',)
+    search_fields = ('caption',)
+
+
+@admin.register(AboutVideo)
+class AboutVideoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'about', 'caption', 'is_active', 'uploaded_at')
+    list_filter = ('is_active',)
+    search_fields = ('caption',)
 
 
 @admin.register(ContactInfo)

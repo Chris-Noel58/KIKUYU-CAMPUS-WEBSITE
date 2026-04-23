@@ -7,9 +7,12 @@ from django.core.mail import send_mail, BadHeaderError, EmailMessage
 from django.conf import settings
 from core.models import (
     Course, BlogPost, Testimonial, GalleryImage, 
-    Application, AboutPage, ContactInfo, ContactMessage
+    Application, AboutPage, ContactInfo, ContactMessage, AboutImage, AboutVideo
 )
 from core.forms import ApplicationForm, ContactForm
+from django.contrib.admin.views.decorators import staff_member_required
+from django.forms import modelform_factory
+from django.db import DatabaseError
 
 
 # ==================== HOME & GENERAL PAGES ====================
@@ -36,9 +39,24 @@ def about(request):
         about_page = AboutPage.objects.first()
     except AboutPage.DoesNotExist:
         about_page = None
-    
+
+    # Safely fetch related media; if migrations haven't been applied the related tables may not exist.
+    about_images = []
+    about_videos = []
+    if about_page:
+        try:
+            about_images = list(about_page.images.all())
+        except DatabaseError:
+            about_images = []
+        try:
+            about_videos = list(about_page.videos.all())
+        except DatabaseError:
+            about_videos = []
+
     context = {
         'about': about_page,
+        'about_images': about_images,
+        'about_videos': about_videos,
     }
     return render(request, 'website/about.html', context)
 
@@ -294,6 +312,50 @@ def newsletter_subscribe(request):
         messages.error(request, 'Please enter a valid email address.')
     
     return redirect(request.META.get('HTTP_REFERER', 'website:home'))
+
+
+# ==================== ADMIN VIEWS ====================
+
+@staff_member_required
+def about_admin_edit(request):
+    """Admin view to edit AboutPage and manage media uploads/deletions"""
+    AboutForm = modelform_factory(AboutPage, exclude=())
+    about = AboutPage.objects.first()
+    if request.method == 'POST':
+        form = AboutForm(request.POST, request.FILES, instance=about)
+        if form.is_valid():
+            about = form.save()
+
+            # Handle deletions (checkboxes send single values; convert to lists)
+            delete_image_ids = request.POST.getlist('delete_images')
+            delete_video_ids = request.POST.getlist('delete_videos')
+            if delete_image_ids:
+                AboutImage.objects.filter(id__in=delete_image_ids, about=about).delete()
+            if delete_video_ids:
+                AboutVideo.objects.filter(id__in=delete_video_ids, about=about).delete()
+
+            # Handle uploaded images
+            images = request.FILES.getlist('images')
+            for f in images:
+                AboutImage.objects.create(about=about, image=f)
+
+            # Handle uploaded videos
+            videos = request.FILES.getlist('videos')
+            for f in videos:
+                AboutVideo.objects.create(about=about, file=f)
+
+            messages.success(request, 'About page updated successfully.')
+            return redirect('dashboard:about_edit')
+        else:
+            messages.error(request, 'Please fix the errors below.')
+    else:
+        form = AboutForm(instance=about)
+
+    context = {
+        'form': form,
+        'about': about,
+    }
+    return render(request, 'dashboard/about/form.html', context)
 
 
 # ==================== UTILITY FUNCTIONS ====================

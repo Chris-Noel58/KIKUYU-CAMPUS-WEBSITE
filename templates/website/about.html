@@ -23,7 +23,11 @@
                 <p>{{ about.history }}</p>
             </div>
             <div class="col-lg-6">
+                {% if about.history_image %}
+                <img src="{{ about.history_image.url }}" class="img-fluid rounded-3 shadow" alt="College History">
+                {% else %}
                 <img src="{% static 'images/history.jpg' %}" class="img-fluid rounded-3 shadow" alt="College History">
+                {% endif %}
             </div>
         </div>
     </div>
@@ -115,35 +119,57 @@
                 </div>
             </div>
             <div class="col-lg-6">
+                {% if about.campus_image %}
+                <img src="{{ about.campus_image.url }}" class="img-fluid rounded-3 shadow" alt="Campus">
+                {% else %}
                 <img src="{% static 'images/campus.jpg' %}" class="img-fluid rounded-3 shadow" alt="Campus">
+                {% endif %}
             </div>
         </div>
     </div>
 </section>
 
-<!-- Media Gallery: show uploaded images and videos -->
+<!-- Media Gallery: show uploaded images and videos (use safe context variables) -->
 <section class="py-5">
     <div class="container">
-        {% if about.images %}
+        {% if about_images %}
         <h3 class="fw-bold mb-4">Gallery</h3>
         <div class="row g-3">
-            {% for img in about.images %}
+            {% for img in about_images %}
             <div class="col-sm-6 col-md-4 col-lg-3">
-                <a href="{{ img.url }}" target="_blank">
-                    <img src="{{ img.url }}" class="img-fluid rounded shadow-sm" alt="About image">
+                {% if img.image %}
+                <a href="{{ img.image.url }}" target="_blank">
+                    <img src="{{ img.image.url }}" class="img-fluid rounded shadow-sm" alt="About image">
                 </a>
+                {% elif img.file %}
+                <a href="{{ img.file.url }}" target="_blank">
+                    <img src="{{ img.file.url }}" class="img-fluid rounded shadow-sm" alt="About image">
+                </a>
+                {% else %}
+                <a href="{{ img }}" target="_blank">
+                    <img src="{{ img }}" class="img-fluid rounded shadow-sm" alt="About image">
+                </a>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        {% if about.videos %}
+        {% if about_videos %}
         <h3 class="fw-bold mt-5 mb-4">Videos</h3>
         <div class="row g-3">
-            {% for vid in about.videos %}
+            {% for vid in about_videos %}
             <div class="col-12 col-md-6">
                 <div class="ratio ratio-16x9">
+                    {% if vid.file %}
+                    <video src="{{ vid.file.url }}" controls class="w-100 rounded shadow-sm"></video>
+                    {% elif vid.video %}
+                    <video src="{{ vid.video.url }}" controls class="w-100 rounded shadow-sm"></video>
+                    {% elif vid.url %}
                     <video src="{{ vid.url }}" controls class="w-100 rounded shadow-sm"></video>
+                    {% else %}
+                    <video src="{{ vid }}" controls class="w-100 rounded shadow-sm"></video>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
