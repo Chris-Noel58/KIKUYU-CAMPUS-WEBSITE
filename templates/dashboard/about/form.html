@@ -17,7 +17,85 @@
         {{ field.errors }}
       </div>
     {% endfor %}
+
+    <!-- added file inputs for images and videos -->
+    <div class="mb-3">
+      <label for="id_images" class="form-label">Images</label>
+      <input type="file" name="images" id="id_images" accept="image/*" multiple class="form-control">
+      <div class="form-text text-muted">You can upload multiple images (JPEG, PNG, GIF).</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="id_videos" class="form-label">Videos</label>
+      <input type="file" name="videos" id="id_videos" accept="video/*" multiple class="form-control">
+      <div class="form-text text-muted">You can upload multiple videos (MP4, WebM).</div>
+    </div>
+
+    <!-- show existing media if provided in context -->
+    <div id="existing-media" class="mb-3">
+      {% if about.images %}
+        <div class="mb-2"><strong>Existing images:</strong></div>
+        <div class="row">
+          {% for img in about.images %}
+            <div class="col-3 mb-2">
+              <img src="{{ img.url }}" class="img-fluid rounded" alt="about image">
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if about.videos %}
+        <div class="mb-2"><strong>Existing videos:</strong></div>
+        <div class="row">
+          {% for vid in about.videos %}
+            <div class="col-6 mb-2">
+              <video src="{{ vid.url }}" controls class="w-100 rounded"></video>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div id="media-preview" class="mb-3 row"></div>
+
     <button class="btn btn-primary">Save</button>
   </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  function previewFiles(inputEl, containerEl) {
+    containerEl.innerHTML = '';
+    Array.from(inputEl.files).forEach(file => {
+      const col = document.createElement('div');
+      col.className = 'col-3 mb-2';
+      if (file.type.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.className = 'img-fluid rounded';
+        img.alt = file.name;
+        img.src = URL.createObjectURL(file);
+        col.appendChild(img);
+      } else if (file.type.startsWith('video/')) {
+        const vid = document.createElement('video');
+        vid.className = 'w-100 rounded';
+        vid.controls = true;
+        vid.src = URL.createObjectURL(file);
+        col.className = 'col-6 mb-2';
+        col.appendChild(vid);
+      }
+      containerEl.appendChild(col);
+    });
+  }
+
+  const imagesInput = document.getElementById('id_images');
+  const videosInput = document.getElementById('id_videos');
+  const preview = document.getElementById('media-preview');
+
+  if (imagesInput) {
+    imagesInput.addEventListener('change', function(){ previewFiles(imagesInput, preview); });
+  }
+  if (videosInput) {
+    videosInput.addEventListener('change', function(){ previewFiles(videosInput, preview); });
+  }
+});
+</script>
 {% endblock %}
