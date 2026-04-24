@@ -37,16 +37,20 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     {% if course.featured_image %}
-                    {% if course.featured_image.name %}
-                    <img src="{{ MEDIA_URL }}{{ course.featured_image.name }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                        {# Prefer the storage-provided URL if available #}
+                        {% if course.featured_image.url %}
+                        <img src="{{ course.featured_image.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                        {% elif course.featured_image.name and MEDIA_URL %}
+                        <img src="{{ MEDIA_URL }}{{ course.featured_image.name }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        {# final fallback to a bundled static image #}
+                        <img src="{% static 'images/default-course.jpg' %}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
                     {% else %}
-                    <img src="" alt="{{ course.title }}" class="card-img-top" style="height: 200px; object-fit: cover; display:none;">
+                    <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-book fa-4x"></i>
+                    </div>
                     {% endif %}
-                     {% else %}
-                     <div class="bg-primary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
-                         <i class="fas fa-book fa-4x"></i>
-                     </div>
-                     {% endif %}
                     
                     <div class="card-body">
                         <h5 class="card-title fw-bold">{{ course.title }}</h5>
