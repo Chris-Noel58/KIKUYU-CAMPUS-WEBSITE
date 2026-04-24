@@ -72,7 +72,7 @@
                     
                     <div class="card-footer bg-white border-top">
                         <div class="d-grid gap-2">
-                            <a href="{% url 'website:course_detail' course.slug %}" class="btn btn-sm btn-outline-primary">
+                            <a href="{% url 'website:courses_detail' course.id %}" class="btn btn-sm btn-outline-primary">
                                 View Details
                             </a>
                             <a href="{% url 'website:apply' %}?course={{ course.id }}" class="btn btn-sm btn-primary">
