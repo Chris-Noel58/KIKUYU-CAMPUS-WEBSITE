@@ -48,7 +48,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='your-real-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 # If running Django's development server, enable DEBUG for local testing
 if 'runserver' in os.sys.argv or os.environ.get('RUN_MAIN') or os.environ.get('WERKZEUG_RUN_MAIN'):
