@@ -124,7 +124,7 @@
                     <strong>Fees:</strong> KES {{ application.course.fees|floatformat:0 }}<br>
                     {% endif %}
                 </p>
-                <a href="{% url 'website:course_detail' application.course.slug %}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                <a href="{% url 'website:courses_detail' application.course.id %}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
                     View Course Page
                 </a>
             </div>
