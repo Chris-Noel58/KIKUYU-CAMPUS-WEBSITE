@@ -71,10 +71,11 @@ class TestimonialAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     
     def get_rating_stars(self, obj):
-        return format_html(
-            '<span style="color: gold;">{"★" * obj.rating}</span>',
-            obj.rating
-        )
+        try:
+            stars = '★' * int(obj.rating)
+        except Exception:
+            stars = ''
+        return format_html('<span style="color: gold;">{}</span>', stars)
     get_rating_stars.short_description = 'Rating'
 
 
