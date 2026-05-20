@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from . import views
 
 app_name = 'website'
@@ -16,4 +17,15 @@ urlpatterns = [
     path('apply/', views.apply, name='apply'),
     path('contact/', views.contact, name='contact'),
     path('newsletter/subscribe/', views.newsletter_subscribe, name='newsletter_subscribe'),
+    # Sitemap routes
+    path(
+        "sitemap.xml",
+        TemplateView.as_view(template_name="sitemap.xml", content_type="text/xml"),
+        name="sitemap",
+    ),
+    path(
+        "sitemap",
+        TemplateView.as_view(template_name="sitemap.xml", content_type="text/xml"),
+        name="sitemap_noext",
+    ),
 ]
