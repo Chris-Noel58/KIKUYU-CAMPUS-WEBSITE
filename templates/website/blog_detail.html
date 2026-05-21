@@ -30,11 +30,11 @@
 
         <div class="content">
           {% if post %}
-            {{ post.content|safe }}
+            {{ post.content|linebreaks }}
           {% elif object %}
-            {{ object.content|safe }}
+            {{ object.content|linebreaks }}
           {% elif blog %}
-            {{ blog.content|safe }}
+            {{ blog.content|linebreaks }}
           {% endif %}
         </div>
       </article>
