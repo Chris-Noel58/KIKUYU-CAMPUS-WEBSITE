@@ -39,6 +39,8 @@
                     <div class="mb-4">
                         <label class="form-label fw-bold">Excerpt *</label>
                         {{ form.excerpt }}
+                        <div id="quill-excerpt" style="height:120px; border: 1px solid #dee2e6; border-radius: .25rem; padding: .5rem;">{{ form.excerpt.value|safe }}</div>
+                        <small class="form-text text-muted">Use the editor above to format the excerpt (bold, lists). The formatted HTML will be saved.</small>
                         {% if form.excerpt.errors %}
                         <div class="alert alert-danger small mt-1">{{ form.excerpt.errors }}</div>
                         {% endif %}
@@ -46,7 +48,10 @@
                     
                     <div class="mb-4">
                         <label class="form-label fw-bold">Content *</label>
+                        <!-- keep the textarea rendered by the form but hide it; Quill will be the visible editor -->
                         {{ form.content }}
+                        <div id="quill-editor" style="height: 300px; border: 1px solid #dee2e6; border-radius: .25rem;">{{ form.content.value|safe }}</div>
+                        <small class="form-text text-muted">Use the editor above to format content (bold, lists, links). The formatted HTML will be saved.</small>
                         {% if form.content.errors %}
                         <div class="alert alert-danger small mt-1">{{ form.content.errors }}</div>
                         {% endif %}
@@ -90,5 +95,68 @@
         </div>
     </div>
 </div>
+
+<!-- Use Quill editor (no API key required) -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var contentTextarea = document.querySelector('#id_content');
+    var excerptTextarea = document.querySelector('#id_excerpt');
+    // hide the textareas but keep them in the form
+    if (contentTextarea) contentTextarea.style.display = 'none';
+    if (excerptTextarea) excerptTextarea.style.display = 'none';
+
+    var quillContainer = document.getElementById('quill-editor');
+    var quillExcerptContainer = document.getElementById('quill-excerpt');
+    var contentQuill = null;
+    var excerptQuill = null;
+
+    if (quillContainer) {
+        contentQuill = new Quill('#quill-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'blockquote', 'code-block'],
+                    ['clean']
+                ]
+            }
+        });
+        var initial = '';
+        if (contentTextarea) initial = contentTextarea.value || contentTextarea.innerText || '';
+        if (!initial.trim()) initial = quillContainer.innerHTML || '';
+        if (initial) contentQuill.root.innerHTML = initial;
+    }
+
+    if (quillExcerptContainer) {
+        excerptQuill = new Quill('#quill-excerpt', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+        var initialEx = '';
+        if (excerptTextarea) initialEx = excerptTextarea.value || excerptTextarea.innerText || '';
+        if (!initialEx.trim()) initialEx = quillExcerptContainer.innerHTML || '';
+        if (initialEx) excerptQuill.root.innerHTML = initialEx;
+    }
+
+    var formEl = (quillContainer || quillExcerptContainer) ? ( (quillContainer || quillExcerptContainer).closest('form') ) : null;
+    if (formEl) {
+        formEl.addEventListener('submit', function() {
+            if (contentTextarea && contentQuill) contentTextarea.value = contentQuill.root.innerHTML;
+            if (excerptTextarea && excerptQuill) excerptTextarea.value = excerptQuill.root.innerHTML;
+        });
+    }
+});
+</script>
 
 {% endblock %}

@@ -6,6 +6,17 @@
 {% endblock %}
 
 {% block content %}
+<style>
+/* Ensure article content shows proper paragraphs and list markers even if theme resets them */
+.content p { margin: 0 0 1rem; line-height: 1.7; }
+.content ul, .content ol { margin: 0 0 1rem 1.5rem; padding-left: 1.25rem; }
+.content ul { list-style-type: disc; }
+.content ol { list-style-type: decimal; }
+.content li { margin-bottom: 0.5rem; }
+.content strong, .content b { font-weight: 600; }
+.content em, .content i { font-style: italic; }
+</style>
+
 <div class="container py-5">
   <div class="row">
     <div class="col-lg-8">
@@ -30,11 +41,11 @@
 
         <div class="content">
           {% if post %}
-            {{ post.content|linebreaks }}
+            {{ post.content|safe|linebreaksbr }}
           {% elif object %}
-            {{ object.content|linebreaks }}
+            {{ object.content|safe|linebreaksbr }}
           {% elif blog %}
-            {{ blog.content|linebreaks }}
+            {{ blog.content|safe|linebreaksbr }}
           {% endif %}
         </div>
       </article>
