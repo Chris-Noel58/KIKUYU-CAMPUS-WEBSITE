@@ -358,6 +358,13 @@ def about_admin_edit(request):
     return render(request, 'dashboard/about/form.html', context)
 
 
+# ==================== STUDENT PORTAL ====================
+
+def student_portal(request):
+    """Render the student portal template"""
+    return render(request, 'website/student_portal.html')
+
+
 # ==================== UTILITY FUNCTIONS ====================
 
 def get_client_ip(request):

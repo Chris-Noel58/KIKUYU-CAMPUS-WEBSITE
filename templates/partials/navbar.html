@@ -24,11 +24,12 @@
                        href="{% url 'website:about' %}">About</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="academicsDropdown" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="academicsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Academics
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="academicsDropdown">
                         <li><a class="dropdown-item" href="{% url 'website:courses_list' %}">Courses</a></li>
+                        <li><a class="dropdown-item" href="{% url 'website:student_portal' %}" target="_blank" rel="noopener">Students Portal</a></li>
                         <li><a class="dropdown-item" href="{% url 'website:apply' %}">Apply Now</a></li>
                     </ul>
                 </li>

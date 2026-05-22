@@ -28,4 +28,5 @@ urlpatterns = [
         TemplateView.as_view(template_name="sitemap.xml", content_type="text/xml"),
         name="sitemap_noext",
     ),
+    path('student-portal/', views.student_portal, name='student_portal'),
 ]
